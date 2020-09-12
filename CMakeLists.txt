@@ -4,7 +4,7 @@ project( 3D_rebuild )
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 #build type
-set(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_BUILD_TYPE "Release")
 
 
 # 添加GDAL依赖
@@ -33,5 +33,8 @@ include_directories(includes) #添加头文件
  
 FILE(GLOB_RECURSE CURRENT_INCLUDE includes/*.hpp)
 FILE(GLOB_RECURSE CURRENT_SOURCES src/*.cpp)     #aux_source_directory(src CURRENT_SOURCES)
+
+
+
 add_executable(checkCornerPoi ${CURRENT_SOURCES} ${CURRENT_INCLUDE})  #制定生成目标
 target_link_libraries( checkCornerPoi ${OpenCV_LIBRARIES} ${GDAL_LIBRARIES} ${PCL_LIBRARIES})

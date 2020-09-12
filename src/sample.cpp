@@ -43,12 +43,20 @@ int describe_the_similarity_of_two_line_with_point_num__vec(vector<int> vec1,vec
 }
 
 
-int main() {
+int main(int argc,char*argv[]) {
     /******************************************** read tiif and get the boundary points in dom with CV methods*************************************************/
 
+    if(argc < 3){
+        
+        std::cout<<"Too few pramaters!"<<std::endl;
+        return 0;
+    }
+    
+    std::string image_path_str = argv[1];
+    std::string cloud_path_str = argv[2];
 
-    const char * file_path_name = "../resource/DOM_seg.tif";//file path of dom
-    Mat img = imread(file_path_name);//read img
+    
+    Mat img = imread(image_path_str);//read img
 
     Point2f center(img.cols/2,img.rows/2);//center
     Mat M = getRotationMatrix2D(center,4.0,1);//set matrix of rotate between point cloud and dom tif
@@ -73,7 +81,7 @@ int main() {
 
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
-    if ( pcl::io::loadPCDFile <pcl::PointXYZ> ("../resource/Cloud_seg_1.pcd", *cloud) == -1)
+    if ( pcl::io::loadPCDFile <pcl::PointXYZ> (cloud_path_str, *cloud) == -1)
     {
         std::cout << "Cloud reading failed." << std::endl;
         return (-1);
@@ -110,7 +118,7 @@ int main() {
     /***********************************************change boundary pcd to mat*******************************************************/
     vector<vector<A_Point2d>>  contours;
     double trans[6];
-    getTrans_of_TiffFile(file_path_name,trans); // get the location transform prameters in input dom
+    getTrans_of_TiffFile(image_path_str.c_str(),trans); // get the location transform prameters in input dom
     float translation_x = 491644.00;//491644.44 +6.8 + 1.25; // set the translation pramaters between point cloud and dom tif
     float translation_y = 5419360.00;//5419357.33 - 9.3 +12; // set the translation pramaters between point cloud and dom tif
     pcd_to_mat( boundaries_cloud_vec,trans,translation_x,translation_y,contours); //change boundary pcd to mat
@@ -128,7 +136,7 @@ int main() {
     Mat longest_similar_filter_combine_similar_lines_mat = Mat(img.size().height,img.size().width,CV_8UC3,Scalar(255, 255, 255));
     Mat sorted_longest_similar_filter_combine_similar_lines_mat = Mat(img.size().height,img.size().width,CV_8UC3,Scalar(255, 255, 255));
     Mat lost_found_and_sorted_longest_similar_filter_combine_similar_lines_mat = Mat(img.size().height,img.size().width,CV_8UC3,Scalar(255, 255, 255));
-    Mat complete_mat = imread(file_path_name);
+    Mat complete_mat = imread(image_path_str);
 
     for(int zzc = 0; zzc < contours.size(); zzc++){
         
