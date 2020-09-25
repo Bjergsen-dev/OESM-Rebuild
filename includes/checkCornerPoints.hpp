@@ -17,6 +17,7 @@ Description:Provide  functions  to find the corner points of build groof
 #include "opencv2/core/core.hpp"
 #include "gdal_methods.hpp"
 #include "pcl_methods.hpp"
+#include <jsoncpp/json/json.h>
 #include <stack>
 #include <cmath>
 #include <deque>
@@ -25,11 +26,14 @@ Description:Provide  functions  to find the corner points of build groof
 #include <array>
 #include <Eigen/Core>
 #include <list>
+#include <fstream>
 
 //#include "edge.hpp"
 
 #include <vector>
 using namespace cv; 
+
+
 
 //dictance between two points
 /*
@@ -72,7 +76,23 @@ bool decide_line_within_pcdBoudaryArea_or_not(Mat &pcd_boudary_mat,Vec4f &vec,fl
 @prama: double *trans -- localization transform prameters of tiff file (used in gdal)
 @prama: float translation_x,float translation_y -- the translation of x,y between pcd and tif file
  */
-void pcd_to_mat(vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &boundary_cloud_vec,double *trans,float translation_x,float translation_y,vector<vector<Eigen::Vector2d>> &contours);
+template<class T>
+void pcd_to_mat(vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &boundary_cloud_vec,double *trans,float translation_x,float translation_y,vector<vector<T>> &contours){
+    
+    int i = 0;
+    for(pcl::PointCloud<pcl::PointXYZ>::Ptr boundary_cloud : boundary_cloud_vec){
+        vector<T> point_vec;
+        for(pcl::PointXYZ point : boundary_cloud->points){
+            float dcol = get_row_column_frm_geoX_geoY(trans,(point.x + translation_x),(point.y + translation_y),1);
+            float drow = get_row_column_frm_geoX_geoY(trans,(point.x + translation_x),(point.y + translation_y),2);
+            point_vec.push_back(T(dcol,drow));
+        }
+        i++;
+        contours.push_back(point_vec);
+    }
+    
+    
+}
 
 //mat to pcd (to use the pcd methods)
 /*
@@ -208,6 +228,15 @@ int get_longest_line_index_in_vec(std::vector<Vec4f> lines_vec);
  @return: cos angle value btw line1 and line2
  */
 float get_cos_btw_two_lines(Vec4f line1,Vec4f line2);
+
+
+//read json
+/*
+ @prama:std::string json_file_path -- json file path
+ @prama:std::vector<std::string> &str_vec -- json string vec
+ */
+
+void readFileJson(std::string json_file_path, std::vector<std::string> &str_vec);
 
 //get the wrong direction and short lines indexes in a lines vec
 /*

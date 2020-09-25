@@ -1,5 +1,7 @@
 #include "checkCornerPoints.hpp"
 #include "delaunayT.hpp"
+#include "fetch_building_three_d_points.hpp"
+
 
 float fangcha(vector<float> foot_dis_vec){
     
@@ -46,14 +48,34 @@ int describe_the_similarity_of_two_line_with_point_num__vec(vector<int> vec1,vec
 int main(int argc,char*argv[]) {
     /******************************************** read tiif and get the boundary points in dom with CV methods*************************************************/
 
-    if(argc < 3){
+    if(argc < 2){
         
         std::cout<<"Too few pramaters!"<<std::endl;
         return 0;
     }
     
-    std::string image_path_str = argv[1];
-    std::string cloud_path_str = argv[2];
+    std::string json_file_path = argv[1];
+    std::vector<std::string> json_str_vec;
+    readFileJson(json_file_path,json_str_vec);
+    
+    std::string image_path_str = json_str_vec[0];
+    std::string cloud_path_str = json_str_vec[1];
+    
+    /*std::string ttstr1 = "/within_lines.tif";
+    std::string ttstr2 = "/filter_lines.tif";
+    std::string ttstr3 = "/sorted_best_line_in_similar_filter_lines.tif";
+    std::string ttstr4 = "/complete_mat.tif";
+    std::string output_path_1 = json_str_vec[2] + ttstr1;
+    std::string output_path_2 = json_str_vec[2] + ttstr2;
+    std::string output_path_3 = json_str_vec[2] + ttstr3;
+    std::string output_path_4 = json_str_vec[2] + ttstr4;*/
+    
+    std::string oesm_path_str= json_str_vec[2];
+    
+    std::string dem_path_str= json_str_vec[3];
+    
+    std::string obj_str = "/buildings_model.obj";
+    std::string obj_file_path = json_str_vec[4] + obj_str;
 
     
     Mat img = imread(image_path_str);//read img
@@ -107,12 +129,12 @@ int main(int argc,char*argv[]) {
 
 
           //visualization the pcd
-    pcl::visualization::PCLVisualizer viewer("Planar Viewer");
+    /*pcl::visualization::PCLVisualizer viewer("Planar Viewer");
     viewer.setBackgroundColor(255, 255, 255);
     D3_view(viewer,boundaries_cloud_vec);
 
 
-      viewer.spinOnce();
+      viewer.spinOnce();*/
     
 
     /***********************************************change boundary pcd to mat*******************************************************/
@@ -138,6 +160,10 @@ int main(int argc,char*argv[]) {
     Mat lost_found_and_sorted_longest_similar_filter_combine_similar_lines_mat = Mat(img.size().height,img.size().width,CV_8UC3,Scalar(255, 255, 255));
     Mat complete_mat = imread(image_path_str);
 
+    
+    std::vector<std::vector<z_Point>> z_points_v_vec;
+    
+    
     for(int zzc = 0; zzc < contours.size(); zzc++){
         
         std::cout<<"------------------progress-------------------"<<zzc+1<<"/"<<contours.size()<<std::endl;
@@ -844,8 +870,19 @@ std::cout<<"------------------Begin Check if some lines lost -------------------
     polylines(complete_mat,complete_points_vec,true,Scalar(255,0,0),8,LINE_AA);
     
      
+    std::vector<z_Point> z_points_vec;
+    fetch_td_points(complete_points_vec,image_path_str.c_str(), oesm_path_str.c_str(),dem_path_str.c_str(),z_points_vec,0);
+    z_points_v_vec.push_back(z_points_vec);
+    
     }
     
+    
+  //add the dom ground plane
+    cv::Size dom_size = img_1.size();
+    std::vector<cv::Point> dom_ground_points_vec{cv::Point(0,0),cv::Point(dom_size.width-1,0),cv::Point(dom_size.width-1,dom_size.height-1),cv::Point(0,dom_size.height-1)};
+    std::vector<z_Point> ttemp_points_vec;
+    fetch_td_points(dom_ground_points_vec,image_path_str.c_str(), oesm_path_str.c_str(),dem_path_str.c_str(),ttemp_points_vec,1);
+    z_points_v_vec.push_back(ttemp_points_vec);
     
     //mat_show("edge_test_mat",edge_test_mat,500);
     mat_show("img_1",img_1,500);
@@ -858,6 +895,37 @@ std::cout<<"------------------Begin Check if some lines lost -------------------
     mat_show("sorted_best_line_in_similar_filter_lines",sorted_longest_similar_filter_combine_similar_lines_mat,500);
     mat_show("lost_found_sorted_best_line_in_similar_filter_lines",lost_found_and_sorted_longest_similar_filter_combine_similar_lines_mat,500);
     mat_show("complete_mat",complete_mat,500);
+    
+ std::cout<<"------------------create the obj file-----------------------"<<std::endl<<std::endl;     
+/*************************** create the obj file *******************************************************/
+vector<z_Plane> z_planes_vec;
+vector<vector<z_Point>> normal_est_v_vec;
+int former_point_count = 0;
+int former_normal_count = 0;
+
+
+
+for(int i = 0; i < z_points_v_vec.size(); i++){
+    
+    bool is_ground = i == z_points_v_vec.size()-1? 1:0;
+    vector<z_Point> normal_est_vec;
+    resize_ele_and_get_normal_vec(z_points_v_vec[i], normal_est_vec,z_planes_vec, former_point_count, former_normal_count,is_ground);
+    former_point_count += z_points_v_vec[i].size();
+    former_normal_count += normal_est_vec.size();
+    normal_est_v_vec.push_back(normal_est_vec);
+}
+
+
+write_to_objfile(obj_file_path.c_str(), z_points_v_vec, normal_est_v_vec,z_planes_vec,dom_size);
+
+
+
+    
+    /*//write the result to file
+    imwrite(output_path_1, within_lines_mat);
+    imwrite(output_path_2, points_to_lines_test_mat);
+    imwrite(output_path_3, sorted_longest_similar_filter_combine_similar_lines_mat);
+    imwrite(output_path_4,complete_mat);*/
 
     return 0;
 

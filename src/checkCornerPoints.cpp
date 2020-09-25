@@ -158,28 +158,7 @@ bool decide_line_within_pcdBoudaryArea_or_not(Mat &pcd_boudary_mat,Vec4f &vec,fl
     
 }
 
-//pcd to mat chansform
-/*
-@prama: vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &boundary_cloud_vec -- the vector record bundary points in pcd
-@prama: double *trans -- localization transform prameters of tiff file (used in gdal)
-@prama: float translation_x,float translation_y -- the translation of x,y between pcd and tif file
- */
-void pcd_to_mat(vector<pcl::PointCloud<pcl::PointXYZ>::Ptr> &boundary_cloud_vec,double *trans,float translation_x,float translation_y,vector<vector<Eigen::Vector2d>> &contours){
-    
-    int i = 0;
-    for(pcl::PointCloud<pcl::PointXYZ>::Ptr boundary_cloud : boundary_cloud_vec){
-        vector<Eigen::Vector2d> point_vec;
-        for(pcl::PointXYZ point : boundary_cloud->points){
-            float dcol = get_row_column_frm_geoX_geoY(trans,(point.x + translation_x),(point.y + translation_y),1);
-            float drow = get_row_column_frm_geoX_geoY(trans,(point.x + translation_x),(point.y + translation_y),2);
-            point_vec.push_back(Eigen::Vector2d(dcol,drow));
-        }
-        i++;
-        contours.push_back(point_vec);
-    }
-    
-    
-}
+
 
 
 
@@ -545,4 +524,50 @@ void get_wrong_lines_indexes(vector<Vec4f> lines_vec,float k_difrence,float leng
         }
     }
 }
+
+//read json
+/*
+ @prama:std::string json_file_path -- json file path
+ @prama:std::vector<std::string> &str_vec -- json string vec
+ */
+
+void readFileJson(std::string json_file_path, std::vector<std::string> &str_vec)
+{
+	Json::Reader reader;
+	Json::Value root;
+ 
+	//从文件中读取，保证当前文件有demo.json文件  
+	ifstream in(json_file_path, ios::binary);
+ 
+	if (!in.is_open())
+	{
+		cout << "Error opening file\n";
+		return;
+	}
+ 
+	if (reader.parse(in, root))
+	{
+
+			std::string input_image_tif = root["inputdata"][0].asString();
+			std::string input_cloud_pcd = root["inputdata"][1].asString();
+            std::string input_oesm_tif = root["inputdata"][2].asString();
+			std::string input_dem_tif = root["inputdata"][3].asString();
+            std::string output = root["output"].asString();
+            str_vec.push_back(input_image_tif);
+            str_vec.push_back(input_cloud_pcd);
+            str_vec.push_back(input_oesm_tif);
+            str_vec.push_back(input_dem_tif);
+            str_vec.push_back(output);
+	
+ 
+		cout << "Reading JSON Complete!" << endl;
+	}
+	else
+	{
+		cout << "JSON parse error\n" << endl;
+	}
+ 
+	in.close();
+}
+
 
