@@ -26,6 +26,11 @@ include_directories( ${PCL_INCLUDE_DIRS} )
 link_directories( ${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+## 添加jsoncpp依赖
+set(lib_DIR /usr/lib/x84_64-linux-gnu)
+link_directories(${lib_DIR})
+
+
 ## 添加eigen3依赖
 include_directories( "/usr/include/eigen3" )
 
@@ -37,4 +42,4 @@ FILE(GLOB_RECURSE CURRENT_SOURCES src/*.cpp)     #aux_source_directory(src CURRE
 
 
 add_executable(checkCornerPoi ${CURRENT_SOURCES} ${CURRENT_INCLUDE})  #制定生成目标
-target_link_libraries( checkCornerPoi ${OpenCV_LIBRARIES} ${GDAL_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries( checkCornerPoi ${OpenCV_LIBRARIES} ${GDAL_LIBRARIES} ${PCL_LIBRARIES} libjsoncpp.a)

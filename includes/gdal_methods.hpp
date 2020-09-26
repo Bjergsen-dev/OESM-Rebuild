@@ -72,3 +72,22 @@ void getTrans_of_TiffFile(const char * file_path_name, double* trans);
  return : the row or column for input spacial XY
  */
 float get_row_column_frm_geoX_geoY(double *trans,double geoX, double geoY,int type);
+
+//get the geoX,geoY subnum in tiff file from row column
+/*
+ @prama: double *trans -- array record thr trans data
+ @prama: double x -- input the clomn
+ @prama: double y -- input the row
+ @prama: int type -- decide the return type 2--geo_X other--geo_Y
+ return : the spacial XY for input row or column
+ */
+float get_geoX_geoY_frm_row_column(double*trans, double x,double y,int type);
+
+//get the elevation of raster tif in paticular row_column
+/*
+ @prama: double *trans -- array record thr trans data
+ @prama: double x -- input the clomn
+ @prama: double y -- input the row
+ return : the elevation for input row or column
+ */
+float get_elevation_frm_row_column(GDALDataset* poDataset, float* inBuf,int x, int y);
